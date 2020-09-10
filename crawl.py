@@ -13,7 +13,7 @@ parser.set_url(parse.urljoin(URL_BASE, 'robots.txt'))
 parser.read()
 
 def get_tree(url):
-    if parser.can_fetch('sebbot', url):
+    if parser.can_fetch(AGENT_NAME, url):
         result = requests.get(url)
         return html.document_fromstring(result.content)
     else:
@@ -68,3 +68,4 @@ pages = [parse.urljoin(URL_BASE, 'a/' + (str(i) if i != 1 else "")) for i in ran
 with Pool(len(pages)) as p:
     p.map(process_page, pages)
 
+print("done")
