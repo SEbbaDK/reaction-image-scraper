@@ -13,8 +13,11 @@ parser.set_url(parse.urljoin(URL_BASE, 'robots.txt'))
 parser.read()
 
 def get_tree(url):
-    result = requests.get(url)
-    return html.document_fromstring(result.content)
+    if parser.can_fetch('sebbot', url):
+        result = requests.get(url)
+        return html.document_fromstring(result.content)
+    else:
+        raise "4Chan's robot.txt disallows this"
 
 
 def is_transparent(image):
@@ -50,7 +53,6 @@ def process_thread(thread):
     images = ['https:' + e.get('href') for e in links]
     for image in images:
         if image.endswith((".gif", ".png")):
-            print(image)
             process_image(image)
 
 
@@ -60,6 +62,7 @@ def process_page(page):
     print(page + " had threads: " + str(len(threads)))
     for thread in threads:
         process_thread(thread)
+
 
 pages = [parse.urljoin(URL_BASE, 'a/' + (str(i) if i != 1 else "")) for i in range(1, 10)]
 with Pool(len(pages)) as p:
