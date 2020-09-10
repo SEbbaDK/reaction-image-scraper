@@ -13,7 +13,7 @@ parser.set_url(parse.urljoin(URL_BASE, 'robots.txt'))
 parser.read()
 
 def get_tree(url):
-    result = requests.get(parse.urljoin(URL_BASE, 'a'))
+    result = requests.get(url)
     return html.document_fromstring(result.content)
 
 
@@ -46,17 +46,18 @@ def process_image(image):
 
 
 def process_thread(thread):
-    images = ['https:' + e.get('href') for e in get_tree(thread).xpath('//a[@class="fileThumb"]')]
+    links = get_tree(thread).xpath('//a[@class="fileThumb"]')
+    images = ['https:' + e.get('href') for e in links]
     for image in images:
         if image.endswith((".gif", ".png")):
+            print(image)
             process_image(image)
 
 
 def process_page(page):
     links = get_tree(page).xpath('//a[@class="replylink"]')
-    threads = [thread.get("href") for thread in links if len(thread.get("href")) != 16]
+    threads = [parse.urljoin(URL_BASE, 'a/' + thread.get("href")) for thread in links if len(thread.get("href")) != 16]
     print(page + " had threads: " + str(len(threads)))
-    print(threads)
     for thread in threads:
         process_thread(thread)
 
