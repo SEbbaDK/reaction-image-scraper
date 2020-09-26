@@ -37,14 +37,14 @@ def is_transparent(image):
     return False
 
 
-def process_image(image, i, n):
+def process_image(image):
     data = requests.get(image).content
     data_bytes = io.BytesIO(data)
     img = Image.open(data_bytes)
     if img.mode in ["P", "RGBA"]:
         if is_transparent(img.convert('RGBA')):
             name = image.split("/")[-1]
-            print(f"[{i}/{n}] saving {name}")
+            print(f"saving {name}")
             img.save("img/" + name)
 
 
@@ -68,12 +68,7 @@ with Pool(size) as p:
     print("loaded")
     images = [image for page in data for thread in page for image in thread]
     print(f"Found {len(images)} candidate images")
-    images_per_thread = int(len(images) / size)
-    print(f"Will download {images_per_thread} per thread")
-    splits = []
-    for i in range(size):
-        splits.append(images[i * images_per_thread : (i * images_per_thread) + images_per_thread])
-    print([len(split) for split in splits])
+    p.map(process_image, images)
 
 
 print("done")
