@@ -37,23 +37,26 @@ def is_transparent(image):
     return False
 
 
-def process_image(image):
+def process_image(image, i, n):
     data = requests.get(image).content
     data_bytes = io.BytesIO(data)
     img = Image.open(data_bytes)
     if img.mode in ["P", "RGBA"]:
         if is_transparent(img.convert('RGBA')):
             name = image.split("/")[-1]
-            print("saving " + name)
+            print(f"[{i}/{n}] saving {name}")
             img.save("img/" + name)
 
 
 def process_thread(thread):
     links = get_tree(thread).xpath('//a[@class="fileThumb"]')
     images = ['https:' + e.get('href') for e in links]
+    total = len(images)
+    current = 0
     for image in images:
+        current += 1
         if image.endswith((".gif", ".png")):
-            process_image(image)
+            process_image(image, current, total)
 
 
 def process_page(page):
