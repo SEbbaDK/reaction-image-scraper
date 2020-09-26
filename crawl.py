@@ -51,24 +51,29 @@ def process_image(image, i, n):
 def process_thread(thread):
     links = get_tree(thread).xpath('//a[@class="fileThumb"]')
     images = ['https:' + e.get('href') for e in links]
-    total = len(images)
-    current = 0
-    for image in images:
-        current += 1
-        if image.endswith((".gif", ".png")):
-            process_image(image, current, total)
+    return [image for image in images if image.lower().endswith((".gif", ".png"))]
 
 
 def process_page(page):
     links = get_tree(page).xpath('//a[@class="replylink"]')
     threads = [parse.urljoin(URL_BASE, 'a/' + thread.get("href")) for thread in links if len(thread.get("href")) != 16]
     print(page + " had threads: " + str(len(threads)))
-    for thread in threads:
-        process_thread(thread)
+    return [process_thread(thread) for thread in threads]
 
 
 pages = [parse.urljoin(URL_BASE, 'a/' + (str(i) if i != 1 else "")) for i in range(1, 10)]
-with Pool(len(pages)) as p:
-    p.map(process_page, pages)
+size = 100
+with Pool(size) as p:
+    data = p.map(process_page, pages)
+    print("loaded")
+    images = [image for page in data for thread in page for image in thread]
+    print(f"Found {len(images)} candidate images")
+    images_per_thread = int(len(images) / size)
+    print(f"Will download {images_per_thread} per thread")
+    splits = []
+    for i in range(size):
+        splits.append(images[i * images_per_thread : (i * images_per_thread) + images_per_thread])
+    print([len(split) for split in splits])
+
 
 print("done")
